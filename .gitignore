@@ -1,0 +1,4 @@
+/.cert/
+/alpr-web/node_modules/
+/alpr-mobile/node_modules/
+/alpr-mobile/.expo/

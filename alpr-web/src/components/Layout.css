@@ -1,0 +1,194 @@
+/* 1. 基础全局设置，调用 Apple 系统字体 */
+body, html { 
+  margin: 0; 
+  padding: 0; 
+  height: 100%; 
+  background-color: #ffffff; 
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #1d1d1f; /* 苹果常用的深灰文字色，比纯黑更护眼 */
+  -webkit-font-smoothing: antialiased; /* 让字体更平滑清晰 */
+}
+
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+/* =========================================
+   💻 PC端专属及共用样式 (保留了你的极简苹果风) 
+   ========================================= */
+
+/* 隐藏移动端专属元素 (在 PC 端不可见) */
+.mobile-header {
+  display: none;
+}
+.mobile-overlay {
+  display: none;
+}
+
+/* 2. 侧边栏样式 - 极浅灰背景 */
+.sidebar {
+  width: 250px;
+  background-color: #f5f5f7; /* Apple 官网和 macOS 侧边栏经典的浅灰色 */
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #d2d2d7; /* 极细且柔和的分割线 */
+  z-index: 10;
+  /* 为手机端的滑出动画做准备：使用苹果丝滑阻尼曲线 */
+  transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.sidebar-logo {
+  padding: 28px 20px 16px;
+  text-align: center;
+}
+
+.sidebar-logo h2 { 
+  margin: 0; 
+  font-size: 18px; 
+  font-weight: 600;
+  color: #1d1d1f; 
+  letter-spacing: 0.5px;
+}
+
+.nav-menu {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+}
+
+/* 3. 导航菜单项 - 类似 macOS Finder 的扁平圆角设计 */
+.nav-item {
+  padding: 10px 16px;
+  margin: 4px 16px; /* 两边留白，形成悬浮胶囊感 */
+  color: #1d1d1f;
+  text-decoration: none;
+  font-size: 15px;
+  border-radius: 8px; /* 圆角矩形 */
+  transition: all 0.2s ease;
+}
+
+/* 鼠标悬浮时的略深浅灰 */
+.nav-item:hover { 
+  background-color: #e8e8ed; 
+}
+
+/* 激活(选中)状态下的高亮 */
+.nav-item.active {
+  background-color: #ffffff; /* 白底 */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* 微弱的呼吸感阴影 */
+  font-weight: 600;
+}
+
+.sidebar-footer { 
+  padding: 20px; 
+}
+
+/* 4. 退出按钮 - 平时低调，悬浮时提示危险 */
+.logout-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: transparent;
+  color: #1d1d1f;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+/* 悬浮时变为 Apple 经典的警告红 */
+.logout-btn:hover { 
+  background-color: #ff3b30; 
+  color: #ffffff; 
+  border-color: #ff3b30;
+}
+
+/* 5. 右侧主内容区 - 纯白空间 */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px;
+  background-color: #ffffff; 
+}
+
+/* =========================================
+   📱 移动端适配 (屏幕宽度小于 768px 时生效) 
+   ========================================= */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+
+  /* 苹果风移动端顶部导航栏 */
+  .mobile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    height: 60px;
+    /* 苹果最爱用的半透明底色 + 强效毛玻璃 */
+    background-color: rgba(255, 255, 255, 0.85); 
+    backdrop-filter: blur(12px); 
+    -webkit-backdrop-filter: blur(12px); /* 兼容 Safari */
+    border-bottom: 1px solid #d2d2d7;
+    z-index: 900;
+  }
+
+  .mobile-logo {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1d1d1f;
+  }
+
+  .menu-toggle-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #1d1d1f;
+    padding: 0;
+  }
+
+  /* 侧边栏变成抽屉，默认隐藏在左侧屏幕外 */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 260px; /* 手机上稍微宽一点，手感更好 */
+    transform: translateX(-100%);
+    box-shadow: 5px 0 25px rgba(0, 0, 0, 0.08); /* 滑出时带一丝高级阴影 */
+  }
+
+  /* 触发显示：滑入屏幕 */
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* 点击菜单外的半透明深色遮罩（带微弱模糊） */
+  .mobile-overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.4); 
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 9; /* 位于 header 下面，sidebar 下面 */
+  }
+
+  /* 手机端主内容区减少内边距，留出更多显示空间 */
+  .main-content {
+    padding: 16px;
+    height: calc(100vh - 60px); 
+  }
+}
