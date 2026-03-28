@@ -8,6 +8,7 @@ import {
 export default function Admin() {
   const [wl, setWl] = useState([]);
   const [plate, setPlate] = useState("");
+  const [expireDays, setExpireDays] = useState("30"); 
   const [loadingWL, setLoadingWL] = useState(false);
   const [errWL, setErrWL] = useState("");
 
@@ -60,7 +61,12 @@ export default function Admin() {
   const addWL = async () => {
     const p = (plate || "").trim().toUpperCase();
     if (!p) return;
-    try { await adminAddWhitelist(p); setPlate(""); await refreshWL(); }
+    try { 
+      await adminAddWhitelist(p, parseInt(expireDays, 10)); 
+      setPlate(""); 
+      setExpireDays("30"); // 添加成功后重置为 30 天
+      await refreshWL(); 
+    }
     catch(e){ alert(e.message || "添加失败"); }
   };
   
@@ -123,28 +129,33 @@ export default function Admin() {
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 32, alignItems: "flex-start" }}>
         
-        {/* 左侧：白名单管理 (限制最大宽度为 400px) */}
+        {/* 左侧：白名单管理 */}
         <div className="apple-card" style={{ flex: "1 1 320px", maxWidth: 400 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-            <div>
-              <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 600, color: "#1d1d1f" }}>白名单管理</h3>
-              <p style={{ margin: 0, color: "#86868b", fontSize: 14 }}>加入白名单的车辆将自动抬杆放行，费用为 0。</p>
-            </div>
-            <button className="apple-btn apple-btn-secondary" style={{ padding: "6px 12px" }} onClick={refreshWL} disabled={loadingWL}>
-              {loadingWL ? "刷新中" : "🔄 刷新"}
-            </button>
-          </div>
 
-          <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
-            <input
-              className="apple-input"
-              value={plate}
-              onChange={(e)=>setPlate(e.target.value)}
-              placeholder="输入车牌号，如：TEST123"
-              style={{ flex: 1 }}
-              onKeyDown={(e) => e.key === "Enter" && addWL()}
-            />
-            <button className="apple-btn" onClick={addWL} disabled={!plate}>➕ 添加</button>
+          <div style={{ display: "flex", gap: 12, marginBottom: 24, flexDirection: "column" }}>
+            <div style={{ display: "flex", gap: 12 }}>
+                <input
+                  className="apple-input"
+                  value={plate}
+                  onChange={(e)=>setPlate(e.target.value)}
+                  placeholder="输入车牌号"
+                  style={{ flex: 1 }}
+                  onKeyDown={(e) => e.key === "Enter" && addWL()}
+                />
+                {/* 👉 新增：选择有效期的下拉框 */}
+                <select 
+                  className="apple-input" 
+                  style={{ width: "100px", padding: "8px" }}
+                  value={expireDays}
+                  onChange={(e) => setExpireDays(e.target.value)}
+                >
+                  <option value="30">30天</option>
+                  <option value="90">90天</option>
+                  <option value="365">1年</option>
+                  <option value="9999">永久</option>
+                </select>
+                <button className="apple-btn" onClick={addWL} disabled={!plate}>➕ 添加</button>
+            </div>
           </div>
 
           {errWL && <p style={{ color: "#ff3b30", fontSize: 14, marginBottom: 16 }}>错误：{errWL}</p>}
@@ -154,6 +165,8 @@ export default function Admin() {
               <thead style={{ background: "#f5f5f7", borderBottom: "1px solid #e5e5ea" }}>
                 <tr>
                   <th style={{ padding: "12px 16px", color: "#86868b", fontWeight: 500 }}>车牌号</th>
+                  {/* 👉 新增表头 */}
+                  <th style={{ padding: "12px 16px", color: "#86868b", fontWeight: 500 }}>到期时间</th>
                   <th style={{ padding: "12px 16px", color: "#86868b", fontWeight: 500, width: 80, textAlign: "right" }}>操作</th>
                 </tr>
               </thead>
@@ -162,6 +175,10 @@ export default function Admin() {
                   <tr key={row.id || row.plate} style={{ borderBottom: i === wl.length - 1 ? "none" : "1px solid #e5e5ea" }}>
                     <td style={{ padding: "12px 16px", fontWeight: 600, color: "#1d1d1f", fontFamily: "monospace", fontSize: 15 }}>
                       {row.plate}
+                    </td>
+                    {/* 👉 新增单元格：显示后端返回的到期时间 */}
+                    <td style={{ padding: "12px 16px", color: "#86868b", fontSize: 13 }}>
+                      {row.vipExpireTime ? fmt(row.vipExpireTime) : "永久"}
                     </td>
                     <td style={{ padding: "12px 16px", textAlign: "right" }}>
                       <button 
@@ -174,8 +191,9 @@ export default function Admin() {
                     </td>
                   </tr>
                 ))}
+                {/* ... 无数据提示的 colspan 需要改成 3 ... */}
                 {wl.length === 0 && (
-                  <tr><td colSpan={2} style={{ padding: "24px", textAlign: "center", color: "#86868b" }}>暂无白名单车辆</td></tr>
+                  <tr><td colSpan={3} style={{ padding: "24px", textAlign: "center", color: "#86868b" }}>暂无白名单车辆</td></tr>
                 )}
               </tbody>
             </table>
@@ -187,7 +205,7 @@ export default function Admin() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
             <div>
               <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 600, color: "#1d1d1f" }}>在场车辆调度</h3>
-              <p style={{ margin: 0, color: "#86868b", fontSize: 14 }}>分为在库（OPEN）与已结算（READY_TO_CLOSE）。</p>
+              <p style={{ margin: 0, color: "#86868b", fontSize: 14 }}>分为在库与已结算。</p>
             </div>
             <button className="apple-btn apple-btn-secondary" style={{ padding: "6px 12px" }} onClick={refreshParked} disabled={loadingP}>
               {loadingP ? "刷新中" : "🔄 刷新"}
@@ -208,7 +226,7 @@ export default function Admin() {
                   <span style={{ color: "#86868b", fontWeight: 400 }}>({data.length} 辆)</span>
 
                   {/* 👉 追加：只有在库中时，才在最右侧显示人工入库按钮（marginLeft: "auto" 将其推到最右边） */}
-                  {title === "在库中 (OPEN)" && (
+                  {/* {title === "在库中 (OPEN)" && (
                     <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
                       <input
                         className="apple-input"
@@ -227,7 +245,7 @@ export default function Admin() {
                         ➕ 人工入库
                       </button>
                     </div>
-                  )}
+                  )} */}
                 </h4>
                 
                 <div style={{ border: "1px solid #e5e5ea", borderRadius: 12, overflowX: "auto" }}>
@@ -239,7 +257,7 @@ export default function Admin() {
                         <th style={{ padding: "12px 16px", color: "#86868b", fontWeight: 500 }}>停留时长</th>
                         <th style={{ padding: "12px 16px", color: "#86868b", fontWeight: 500 }}>费用</th>
                         <th style={{ padding: "12px 16px", color: "#86868b", fontWeight: 500 }}>类型</th>
-                        {showAction && <th style={{ padding: "12px 16px", color: "#86868b", fontWeight: 500, textAlign: "right" }}>操作</th>}
+                        {/* {showAction && <th style={{ padding: "12px 16px", color: "#86868b", fontWeight: 500, textAlign: "right" }}>操作</th>} */}
                       </tr>
                     </thead>
                     <tbody>
@@ -261,7 +279,7 @@ export default function Admin() {
                           <td style={{ padding: "12px 16px" }}>
                             {row.whitelist ? <Badge text="白名单" type="success" /> : <Badge text="外来车辆" type="default" />}
                           </td>
-                          {showAction && (
+                          {/* {showAction && (
                             <td style={{ padding: "12px 16px", textAlign: "right" }}>
                               <button 
                                 className="apple-btn" 
@@ -271,7 +289,7 @@ export default function Admin() {
                                 人工出库
                               </button>
                             </td>
-                          )}
+                          )} */}
                         </tr>
                       ))}
                       {data.length === 0 && (
@@ -291,7 +309,6 @@ export default function Admin() {
             );
           })()}
         </div>
-
       </div>
     </div>
   );

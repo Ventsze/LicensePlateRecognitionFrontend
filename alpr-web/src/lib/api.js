@@ -84,11 +84,11 @@ export async function adminGetWhitelist() {
   if (!r.ok) throw new Error('whitelist load fail');
   return r.json();
 }
-export async function adminAddWhitelist(plate) {
+export async function adminAddWhitelist(plate, days = 30) {
   const r = await fetch('/api/parking/admin/whitelist', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ plate })
+    body: JSON.stringify({ plate, days }) 
   });
   if (!r.ok) throw new Error('add whitelist fail');
   return r.json();
